@@ -8,7 +8,10 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -17,6 +20,7 @@ import com.codeid.ushopay.model.enumeration.EnumStatus;
 import com.codeid.ushopay.model.response.ApiResponse;
 import com.codeid.ushopay.service.BaseCrudService;
 import com.codeid.ushopay.service.FileStorageService;
+import com.codeid.ushopay.service.ProductImagesService;
 import com.codeid.ushopay.service.ProductsService;
 
 import jakarta.validation.Valid;
@@ -31,6 +35,7 @@ public class ProductsController extends BaseMultiPartController<ProductsDto, Int
     
     private final ProductsService productService;
     private final FileStorageService fileStorageService;
+    private final ProductImagesService productImagesService;
 
     @Override
     protected BaseCrudService<ProductsDto, Integer> getService() {
@@ -74,8 +79,13 @@ public class ProductsController extends BaseMultiPartController<ProductsDto, Int
             dto.setPhoto(fileName);
             var productsDto= productService.save(dto);    
 
-            ApiResponse<ProductsDto> response = new ApiResponse<ProductsDto>(EnumStatus.Succeed.toString(), "Product created", productsDto);
+            // ApiResponse<ProductsDto> response = new ApiResponse<ProductsDto>(EnumStatus.Succeed.toString(), "Product created", productsDto);
 
+            var response = ApiResponse.builder()
+                .status(EnumStatus.Succeed.toString())
+                .message("Product created")
+                .data(productsDto)
+                .build();
             return ResponseEntity.ok(response);
 
         } catch (Exception e) {
@@ -106,5 +116,28 @@ public class ProductsController extends BaseMultiPartController<ProductsDto, Int
     public ResponseEntity<?> updateMultipart(Integer id, ProductsDto dto, MultipartFile file, String description) {
         throw new UnsupportedOperationException("Unimplemented method 'updateMultipart'");
     }
-    
+    @PostMapping("{id}/uploadMultipleImages")
+    public ResponseEntity<?> createBulkImages(@PathVariable Integer id,@RequestPart("files") MultipartFile[] files){
+        
+        if (files == null || files.length == 0) {
+            return ResponseEntity.badRequest().body("No files uploaded");
+        }
+        try {
+            var result = productImagesService.bulkInsert(id, files);
+
+            var response = ApiResponse.builder()
+                    .status(EnumStatus.Succeed.toString())
+                    .message("Successfully uploaded multiple images")
+                    .data(result)
+                    .build();
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            log.error("Failed to upload multiple images", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Collections.singletonMap("error", e.getMessage()));
+        }
+
+    }
 }

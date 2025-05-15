@@ -10,6 +10,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -18,6 +19,7 @@ import lombok.NonNull;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
+@Builder
 @Table(name="products",schema = "oe")
 public class Products extends AbstractEntity{
     @Id
@@ -26,7 +28,6 @@ public class Products extends AbstractEntity{
     private Integer productId;
 
     @Column(name = "product_name")
-    @NonNull
     private String productName;
 
     @Column(name = "quantity_per_unit")
@@ -45,7 +46,6 @@ public class Products extends AbstractEntity{
     private Integer reorderLevel;
 
     @Column(name = "discontinued")
-    @Nonnull
     private Integer discontinued;
 
     @Column(name = "photo")
